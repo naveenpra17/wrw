@@ -1,0 +1,54 @@
+version: '3'
+
+services:
+  eureka-server:
+    build: eureka-server/
+    restart: always
+    network_mode: "host"
+    hostname: localhost
+    image: eureka-server
+    ports:
+      - 8085:8085
+
+  config-service:
+    build: config-server/
+    restart: always
+    network_mode: "host"
+    image: config-service
+    hostname: localhost
+    ports:
+      - 8888:8888
+
+  zuul-api:
+    build: zuul-api/
+    depends_on:
+      - config-service
+      - eureka-server
+    restart: always
+    network_mode: "host"
+    image: zuul-api
+    hostname: localhost
+    ports:
+      - 8080:8080
+  mysql:
+    image: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: 'root'
+    container_name: mysql-container
+    volumes:
+      - docker-volume:/var/lib/mysql
+    restart: always
+
+  authentication-service:
+    build: authentication-service/
+    container_name: authentication
+    links:
+      - mysql
+    depends_on:
+      - mysql
+    restart: always
+#    image: authentication
+    ports:
+      - 8082:8082
+volumes:
+  docker-volume:
